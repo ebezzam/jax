@@ -14,12 +14,14 @@
 """See primitives_test docstring for how the Jax2TfLimitations are used"""
 
 import itertools
+import logging
 import numpy as np
 from typing import Any, Callable, Optional, Sequence, Union
 
 from jax._src import dtypes
 from jax import lax
 from jax import numpy as jnp
+from jax import test_util as jtu
 
 from jax.experimental.jax2tf.tests import primitive_harness
 
@@ -124,13 +126,13 @@ class Jax2TfLimitation(primitive_harness.Limitation):
 
   # We keep here the explicit set of groups for which we don't have limitations
   harness_groups_no_limitations = {
-      "abs", "add", "add_any", "and", "argmin", "argmax", "atan2",
+      "abs", "add", "add_any", "and", "atan2",
       "bitcast_convert_type", "broadcast", "broadcast_in_dim", "ceil", "clamp",
       "concatenate", "cos", "cosh", "complex", "conj", "convert_element_type",
       "cummax", "cummin", "device_put", "dynamic_slice",
       "dynamic_update_slice", "exp", "eq", "floor", "gather", "ge", "gt", "imag",
       "iota", "is_finite", "le", "lt", "log", "mul", "ne", "neg", "not",
-      "or", "pad", "population_count", "random_split",
+      "or", "pad", "population_count", "random_split", "reduce",
       "reduce_and", "reduce_prod", "reduce_or", "reduce_sum",
       "reduce_window_add", "reduce_window_mul", "reduce_window_min", "reduce_window_max",
       "real", "reshape", "rev", "rsqrt", "scatter_max", "scatter_min",
@@ -175,6 +177,23 @@ class Jax2TfLimitation(primitive_harness.Limitation):
         custom_numeric(dtypes=np.complex128, devices=("cpu", "gpu"), tol=1e-12),
         cls.helper_get_trig_custom_limitation(np.cosh)
     ]
+
+  @classmethod
+  def argmax(cls, harness: primitive_harness.Harness):
+    return [
+        Jax2TfLimitation(
+            "different results when the input contains NaN and enable_xla=False",
+            dtypes=jtu.dtypes.all_inexact,
+            devices=("cpu", "gpu", "tpu"),
+            modes=("eager", "graph", "compiled"),
+            expect_tf_error=False,
+            skip_comparison=True,
+            enabled=("nan_" in harness.name and not harness.params["enable_xla"])),
+    ]
+
+  @classmethod
+  def argmin(cls, harness: primitive_harness.Harness):
+    return cls.argmax(harness)
 
   @classmethod
   def asin(cls, harness: primitive_harness.Harness):
