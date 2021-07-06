@@ -29,7 +29,7 @@ Python and NumPy functions. It can differentiate through loops, branches,
 recursion, and closures, and it can take derivatives of derivatives of
 derivatives. It supports reverse-mode differentiation (a.k.a. backpropagation)
 via [`grad`](#automatic-differentiation-with-grad) as well as forward-mode differentiation,
-and the two can be composed arbitrarily to any order.
+and the two can be composed arbitrarily in any order.
 
 What’s new is that JAX uses [XLA](https://www.tensorflow.org/xla)
 to compile and run your NumPy programs on GPUs and TPUs. Compilation happens
